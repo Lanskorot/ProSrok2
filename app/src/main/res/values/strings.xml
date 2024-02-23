@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">ProSrok</string>
+    <string name="load_data">загрузить в базу</string>
+    <string name="num_code">Код товара:</string>
+    <string name="name_code">Наименование:</string>
+    <string name="quantity">Количество:</string>
+    <string name="date_code">Дата окончания срока:</string>
+    <string name="comments">Коментарии:</string>
+    <string name="hint_code">введите код</string>
+    <string name="hint_name">введите наименование</string>
+    <string name="hint_quantity">введите количество</string>
+    <string name="hint_date">введите дату</string>
+    <string name="hint_comments">введите коментарий</string>
+    <string name="title_activity_scan">scan</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+
+</resources>
