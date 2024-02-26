@@ -25,8 +25,6 @@ import java.util.Date;
 import java.util.Locale;
 
 
-
-
 public class MainActivity extends AppCompatActivity {
 
     private EditText editTextText6, editTextText2, editTextText3, editTextText4, editTextText5;
@@ -113,7 +111,6 @@ public class MainActivity extends AppCompatActivity {
 
         jsonArray = loadDataFromPreferences();
 
-        // Ваш существующий код
         Intent intent = getIntent();
         if (intent != null) {
             String barcode = intent.getStringExtra("barcode");
@@ -166,13 +163,6 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, ScanActivity.class);
         startActivity(intent);
     }
-
-    public void startEditingAndDeleting(View v){
-        Intent intent = new Intent(this, editingAndDeleting.class);
-        startActivity(intent);
-
-    }
-
 
 
 
@@ -266,6 +256,12 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    public void startEditingAndDeleting(View v) {
+        Intent intent = new Intent(this, editingAndDeleting.class);
+        intent.putExtra("jsonArray", jsonArray.toString());
+        startActivity(intent);
+    }
+
     public void show_scan(View v) {
         Intent intent = new Intent(this, ScanActivity.class);
         startActivity(intent);
@@ -294,6 +290,13 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
             Toast.makeText(this, "Произошла ошибка при добавлении данных", Toast.LENGTH_SHORT).show();
         }
+        sendUpdatedArrayToEditingAndDeleting(jsonArray);
+    }
+
+    private void sendUpdatedArrayToEditingAndDeleting(JSONArray updatedArray) {
+        Intent intent = new Intent(this, editingAndDeleting.class);
+        intent.putExtra("jsonArray", updatedArray.toString());
+        startActivity(intent);
     }
 
     private void writeJsonToFile(String fileName, String json) {

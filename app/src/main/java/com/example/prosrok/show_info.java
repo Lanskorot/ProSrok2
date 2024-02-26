@@ -419,4 +419,10 @@ public class show_info extends AppCompatActivity {
 
         return new JSONArray(jsonValues);
     }
+
+    public void go_to_main(View view) {
+        // Ваш код для обработки нажатия кнопки и перехода к главному экрану
+        Intent intent = new Intent(this, MainActivity.class); // Замените MainActivity на класс вашей главной активности
+        startActivity(intent);
+    }
 }
