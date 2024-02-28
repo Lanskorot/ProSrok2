@@ -42,14 +42,18 @@ public class DataBaseAssetsHelper extends SQLiteAssetHelper {
 
     public String getDataFromBarcodeEAN(String barcode) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT Beschreibung FROM total_data WHERE `EAN Nummer` = ?";
+        String query = "SELECT Beschreibung, `Artikelnummer` FROM total_data WHERE `EAN Nummer` = ?";
         Cursor cursor = db.rawQuery(query, new String[]{barcode});
 
-        String result = null;
+        String resultBeschreibung = null;
+        String resultArtikelnummer = null;
 
         if (cursor != null && cursor.moveToFirst()) {
-            int columnIndex = cursor.getColumnIndex("Beschreibung");
-            result = cursor.getString(columnIndex);
+            int columnIndexBeschreibung = cursor.getColumnIndex("Beschreibung");
+            resultBeschreibung = cursor.getString(columnIndexBeschreibung);
+
+            int columnIndexArtikelnummer = cursor.getColumnIndex("Artikelnummer");
+            resultArtikelnummer = cursor.getString(columnIndexArtikelnummer);
         }
 
         db.close();
@@ -58,9 +62,17 @@ public class DataBaseAssetsHelper extends SQLiteAssetHelper {
             cursor.close();
         }
 
-        if (result == null) {
-            result = "Товар не найден.";
+        if (resultBeschreibung == null) {
+            resultBeschreibung = "Товар не найден.";
         }
-        return result;
+
+        if (resultArtikelnummer == null) {
+            resultArtikelnummer = "Товар не найден.";
+        }
+
+        // You can return both values in a more structured way, e.g., as a JSON string or a custom object
+        return resultBeschreibung + "," + resultArtikelnummer;
+
     }
+
 }

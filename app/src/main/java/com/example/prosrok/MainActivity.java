@@ -13,6 +13,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.Nullable;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -159,9 +160,11 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private static final int SCAN_ACTIVITY_REQUEST_CODE = 1;
+
     private void startScanActivity() {
         Intent intent = new Intent(this, ScanActivity.class);
-        startActivity(intent);
+        startActivityForResult(intent, SCAN_ACTIVITY_REQUEST_CODE);
     }
 
 
@@ -310,4 +313,27 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Ошибка сохранения данных", Toast.LENGTH_SHORT).show();
         }
     }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == SCAN_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
+            if (data != null) {
+                if (data.hasExtra("Beschreibung")) {
+                    String beschreibung = data.getStringExtra("Beschreibung");
+
+                    // Разделим значения resultBeschreibung и resultArtikelnummer
+                    String[] values = beschreibung.split(",");
+                    if (values.length >= 2) {
+                        String resultBeschreibung = values[0];
+                        String resultArtikelnummer = values[1];
+
+                        // Установим значения в соответствующие поля
+                        editTextText2.setText(resultBeschreibung);
+                        editTextText6.setText(resultArtikelnummer);
+                    }
+                }
+            }
+        }
+    }
+
 }
