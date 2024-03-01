@@ -71,7 +71,7 @@ public class DataBaseAssetsHelper extends SQLiteAssetHelper {
         }
 
         // You can return both values in a more structured way, e.g., as a JSON string or a custom object
-        return resultBeschreibung + "," + resultArtikelnummer;
+        return resultArtikelnummer + "," + resultBeschreibung;
 
     }
 

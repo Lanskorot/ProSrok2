@@ -259,11 +259,6 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void startEditingAndDeleting(View v) {
-        Intent intent = new Intent(this, editingAndDeleting.class);
-        intent.putExtra("jsonArray", jsonArray.toString());
-        startActivity(intent);
-    }
 
     public void show_scan(View v) {
         Intent intent = new Intent(this, ScanActivity.class);
@@ -293,14 +288,10 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
             Toast.makeText(this, "Произошла ошибка при добавлении данных", Toast.LENGTH_SHORT).show();
         }
-        sendUpdatedArrayToEditingAndDeleting(jsonArray);
+
     }
 
-    private void sendUpdatedArrayToEditingAndDeleting(JSONArray updatedArray) {
-        Intent intent = new Intent(this, editingAndDeleting.class);
-        intent.putExtra("jsonArray", updatedArray.toString());
-        startActivity(intent);
-    }
+
 
     private void writeJsonToFile(String fileName, String json) {
         try {
@@ -313,7 +304,6 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Ошибка сохранения данных", Toast.LENGTH_SHORT).show();
         }
     }
-    @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == SCAN_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
@@ -324,8 +314,8 @@ public class MainActivity extends AppCompatActivity {
                     // Разделим значения resultBeschreibung и resultArtikelnummer
                     String[] values = beschreibung.split(",");
                     if (values.length >= 2) {
-                        String resultBeschreibung = values[0];
-                        String resultArtikelnummer = values[1];
+                        String resultBeschreibung = values[1];
+                        String resultArtikelnummer = values[0];
 
                         // Установим значения в соответствующие поля
                         editTextText2.setText(resultBeschreibung);

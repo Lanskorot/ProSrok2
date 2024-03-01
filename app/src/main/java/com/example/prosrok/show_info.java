@@ -2,9 +2,12 @@ package com.example.prosrok;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -56,10 +59,6 @@ public class show_info extends AppCompatActivity {
         String overdueInfo = getOverdueInfoBeforeToday(jsonArray);
         displayOverdueInfo(overdueInfo, R.color.red);
 
-
-
-
-
         button6.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -84,7 +83,6 @@ public class show_info extends AppCompatActivity {
             }
         });
 
-
         button9.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -95,6 +93,16 @@ public class show_info extends AppCompatActivity {
 
                 // Устанавливаем цвет текста в черный
                 infoTextView.setTextColor(getResources().getColor(android.R.color.black));
+            }
+        });
+
+        textView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                // Показать всплывающее окно при долгом нажатии
+                int position = 0;  // Получите позицию элемента в зависимости от вашей логики
+                showPopupMenu(v, position);
+                return true;
             }
         });
     }
@@ -136,8 +144,6 @@ public class show_info extends AppCompatActivity {
 
         return getOverdueInfo(jsonArray, today, tomorrow);
     }
-
-
 
     private String getOverdueInfoYesterdayTo3(JSONArray jsonArray) {
         List<JSONObject> sortedList = new ArrayList<>();
@@ -285,7 +291,6 @@ public class show_info extends AppCompatActivity {
         return overdueInfo.toString();
     }
 
-
     private Date getDateAfterDays(int days) {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_MONTH, days);
@@ -425,4 +430,57 @@ public class show_info extends AppCompatActivity {
         Intent intent = new Intent(this, MainActivity.class); // Замените MainActivity на класс вашей главной активности
         startActivity(intent);
     }
+
+    private void showPopupMenu(View view, final int position) {
+        PopupMenu popupMenu = new PopupMenu(this, view);
+        popupMenu.getMenuInflater().inflate(R.menu.context_menu, popupMenu.getMenu());
+
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                int itemId = item.getItemId();
+
+                if (itemId == R.id.menu_delete) {
+                    // Обработка удаления
+                    deleteItem(position);
+                    return true;
+                } else if (itemId == R.id.menu_edit) {
+                    // Обработка редактирования
+                    // вызовите метод для редактирования выбранного элемента
+
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        });
+        popupMenu.show();
+    }
+    private void deleteItem(int position) {
+        // Удаляем элемент из списка JSON
+        jsonArray.remove(position);
+        // Сохраняем обновленный список в вашем приложении
+        // Например, можно использовать SharedPreferences или базу данных
+        // В этом примере, предполагается, что у вас есть метод для сохранения jsonArray в SharedPreferences
+        saveJsonArrayToSharedPreferences(jsonArray);
+        // Обновляем интерфейс после удаления
+        updateInterface();
+    }
+
+    private void saveJsonArrayToSharedPreferences(JSONArray jsonArray) {
+        // Ваш код для сохранения jsonArray в SharedPreferences
+        // Например, использование SharedPreferences для хранения строки JSON
+    }
+
+    private void updateInterface() {
+        // Обновите ваш интерфейс после удаления элемента
+        // Например, вызовите метод для отображения данных в textView6
+        String formattedData = formatData(jsonArray.toString());
+        infoTextView.setText(formattedData);
+        // Устанавливаем цвет текста в черный
+        infoTextView.setTextColor(getResources().getColor(android.R.color.black));
+    }
+
+
 }
+
