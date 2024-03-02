@@ -35,7 +35,7 @@
         <EditText
             android:id="@+id/editTextText6"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
+            android:layout_height="30dp"
             android:layout_marginTop="8dp"
             android:background="#FFFFFF"
             android:ems="10"
@@ -107,14 +107,12 @@
         android:ems="10"
         android:hint="@string/hint_name"
         android:inputType="text|textMultiLine"
-        android:minHeight="48dp"
-
         android:textSize="24sp"
+
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
-
     <EditText
         android:id="@+id/editTextText3"
         android:layout_width="wrap_content"
@@ -124,7 +122,6 @@
         android:ems="10"
         android:hint="@string/hint_quantity"
         android:inputType="number"
-        android:minHeight="48dp"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.496"
@@ -140,7 +137,6 @@
         android:ems="10"
         android:hint="@string/hint_date"
         android:inputType="date"
-        android:minHeight="48dp"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -155,7 +151,6 @@
         android:ems="10"
         android:hint="@string/hint_comments"
         android:inputType="text"
-        android:minHeight="48dp"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.503"

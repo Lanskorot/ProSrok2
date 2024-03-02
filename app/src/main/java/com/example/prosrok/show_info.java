@@ -2,6 +2,7 @@ package com.example.prosrok;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -101,6 +102,7 @@ public class show_info extends AppCompatActivity {
             public boolean onLongClick(View v) {
                 // Показать всплывающее окно при долгом нажатии
                 int position = 0;  // Получите позицию элемента в зависимости от вашей логики
+                selectedPosition = position; // Установите выбранную позицию
                 showPopupMenu(v, position);
                 return true;
             }
@@ -311,6 +313,7 @@ public class show_info extends AppCompatActivity {
         startActivity(intent);
     }
 
+
     private String getOverdueInfo(JSONArray jsonArray, Date startDate, Date endDate) {
         StringBuilder overdueInfo = new StringBuilder();
 
@@ -430,24 +433,27 @@ public class show_info extends AppCompatActivity {
         Intent intent = new Intent(this, MainActivity.class); // Замените MainActivity на класс вашей главной активности
         startActivity(intent);
     }
-
+    private int selectedPosition;
     private void showPopupMenu(View view, final int position) {
+        Log.d("ShowPopupMenu", "Position in showPopupMenu: " + position);
         PopupMenu popupMenu = new PopupMenu(this, view);
         popupMenu.getMenuInflater().inflate(R.menu.context_menu, popupMenu.getMenu());
 
         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
+                selectedPosition = position;
                 int itemId = item.getItemId();
 
                 if (itemId == R.id.menu_delete) {
                     // Обработка удаления
-                    deleteItem(position);
+                    Log.d("ShowPopupMenu", "Position in deleteItem: " + selectedPosition);
+                    deleteItem();
                     return true;
                 } else if (itemId == R.id.menu_edit) {
-                    // Обработка редактирования
-                    // вызовите метод для редактирования выбранного элемента
-
+                    // Обработка редактирования с передачей позиции
+                    Log.d("ShowPopupMenu", "Position in editItem: " + selectedPosition);
+                    editItem();
                     return true;
                 } else {
                     return false;
@@ -456,15 +462,46 @@ public class show_info extends AppCompatActivity {
         });
         popupMenu.show();
     }
-    private void deleteItem(int position) {
-        // Удаляем элемент из списка JSON
-        jsonArray.remove(position);
-        // Сохраняем обновленный список в вашем приложении
-        // Например, можно использовать SharedPreferences или базу данных
-        // В этом примере, предполагается, что у вас есть метод для сохранения jsonArray в SharedPreferences
-        saveJsonArrayToSharedPreferences(jsonArray);
-        // Обновляем интерфейс после удаления
-        updateInterface();
+
+
+    private void editItem() {
+        // Получите выбранный JSONObject с использованием выбранной позиции
+        JSONObject selectedObject = null;
+        try {
+            selectedObject = jsonArray.getJSONObject(selectedPosition);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        // Передайте данные в активити edit для редактирования, включая позицию
+        Intent editIntent = new Intent(this, edit.class);
+        editIntent.putExtra("selectedObject", selectedObject.toString());
+        editIntent.putExtra("position", selectedPosition);
+        startActivity(editIntent);
+    }
+
+    private void deleteItem() {
+        // Логирование для проверки содержимого jsonArray перед удалением
+        Log.d("DeleteItem", "jsonArray before deletion: " + jsonArray.toString());
+
+        try {
+            // Удаляем элемент из списка JSON с использованием выбранной позиции
+            jsonArray.remove(selectedPosition);
+
+            // Логирование для проверки содержимого jsonArray после удаления
+            Log.d("DeleteItem", "jsonArray after deletion: " + jsonArray.toString());
+
+            // Сохраняем обновленный список в вашем приложении
+            // Например, можно использовать SharedPreferences или базу данных
+            // В этом примере, предполагается, что у вас есть метод для сохранения jsonArray в SharedPreferences
+            saveJsonArrayToSharedPreferences(jsonArray);
+
+            // Обновляем интерфейс после удаления
+            updateInterface();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e("DeleteItem", "Error deleting item at selected position: " + selectedPosition);
+        }
     }
 
     private void saveJsonArrayToSharedPreferences(JSONArray jsonArray) {
@@ -480,7 +517,5 @@ public class show_info extends AppCompatActivity {
         // Устанавливаем цвет текста в черный
         infoTextView.setTextColor(getResources().getColor(android.R.color.black));
     }
-
-
 }
 

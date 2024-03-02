@@ -62,6 +62,25 @@ public class edit extends AppCompatActivity {
         editTextText5 = findViewById(R.id.editTextText5);
         Button button = findViewById(R.id.button);
 
+        Intent intent = getIntent();
+        if (intent != null) {
+            String selectedObjectString = intent.getStringExtra("selectedObject");
+            int position = intent.getIntExtra("position", -1);
+
+            if (selectedObjectString != null && position != -1) {
+                try {
+                    // Получите выбранный JSONObject и заполните соответствующие поля
+                    JSONObject selectedObject = new JSONObject(selectedObjectString);
+                    editTextText6.setText(selectedObject.getString("штрих-код"));
+                    editTextText2.setText(selectedObject.getString("название"));
+                    editTextText3.setText(selectedObject.getString("количество"));
+                    editTextText4.setText(selectedObject.getString("дата окончания срока"));
+                    editTextText5.setText(selectedObject.getString("комментарий"));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
 
         editTextText4.addTextChangedListener(new TextWatcher() {
@@ -85,22 +104,7 @@ public class edit extends AppCompatActivity {
             }
         });jsonArray = loadDataFromPreferences();
 
-        Intent intent = getIntent();
-        if (intent != null) {
-            String barcode = intent.getStringExtra("barcode");
-            String part1 = intent.getStringExtra("part1");
-            String part2 = intent.getStringExtra("part2");
-            String part3 = intent.getStringExtra("part3");
-            String part4 = intent.getStringExtra("part4");
-            String part5 = intent.getStringExtra("part5");
-            String part6 = intent.getStringExtra("part6");
 
-            if (barcode != null && part1 != null && part2 != null && part3 != null && part4 != null && part5 != null && part6 != null) {
-                // Заполните соответствующие поля на главной странице
-                editTextText6.setText(part4);
-                editTextText2.setText(part6);
-            }
-        }
 
 
         button.setOnClickListener(new View.OnClickListener() {
@@ -121,6 +125,8 @@ public class edit extends AppCompatActivity {
                             editTextText6.requestFocus();
                         }
                     });
+
+                    finish();
                 } else {
                     // Вывести сообщение об ошибке
                     Toast.makeText(edit.this, "Некорректная дата", Toast.LENGTH_SHORT).show();
@@ -227,8 +233,6 @@ public class edit extends AppCompatActivity {
 
     }
 
-
-
     private void writeJsonToFile(String fileName, String json) {
         try {
             FileOutputStream fos = openFileOutput(fileName, Context.MODE_PRIVATE);
@@ -240,7 +244,5 @@ public class edit extends AppCompatActivity {
             Toast.makeText(this, "Ошибка сохранения данных", Toast.LENGTH_SHORT).show();
         }
     }
-
-
 }
 
