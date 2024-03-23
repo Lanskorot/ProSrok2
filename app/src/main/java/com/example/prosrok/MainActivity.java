@@ -14,25 +14,28 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.SetOptions;
+
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
-
-
-
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
     private EditText editTextText6, editTextText2, editTextText3, editTextText4, editTextText5;
     private JSONArray jsonArray;
     private Button btn_scan;
-
+    private FirebaseFirestore db;
 
 
     private boolean isValidDate(String date) {
@@ -53,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        db = FirebaseFirestore.getInstance();
+
         editTextText6 = findViewById(R.id.editTextText6);
         editTextText2 = findViewById(R.id.editTextText2);
         editTextText3 = findViewById(R.id.editTextText3);
@@ -61,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         Button button = findViewById(R.id.button);
         btn_scan = findViewById(R.id.btn_scan);
 
-
+        removeExpiredItemsFromFirestore();
 
         editTextText6.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
@@ -113,7 +118,6 @@ public class MainActivity extends AppCompatActivity {
 
         jsonArray = loadDataFromPreferences();
 
-        // Ваш существующий код
         Intent intent = getIntent();
         if (intent != null) {
             String barcode = intent.getStringExtra("barcode");
@@ -135,14 +139,16 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d("MainActivity", "Button clicked");
                 String enteredDate = editTextText4.getText().toString().trim();
 
                 // Проверка корректности формата даты
                 if (isValidDate(enteredDate)) {
+                    Log.d("MainActivity", "Valid date");
 
                     addDataToArray();
                     saveDataToPreferences(jsonArray.toString());
-                    removeExpiredItems();
+                    removeExpiredItemsFromFirestore();
                     editTextText6.post(new Runnable() {
                         @Override
                         public void run() {
@@ -166,13 +172,6 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, ScanActivity.class);
         startActivity(intent);
     }
-
-    public void startEditingAndDeleting(View v){
-        Intent intent = new Intent(this, editingAndDeleting.class);
-        startActivity(intent);
-
-    }
-
 
 
 
@@ -203,33 +202,49 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void removeExpiredItems() {
-        JSONArray updatedArray = new JSONArray();
+    private void removeExpiredItemsFromFirestore() {
+        // Получаем текущее время
+        long currentTimeMillis = System.currentTimeMillis();
 
-        for (int i = 0; i < jsonArray.length(); i++) {
-            try {
-                JSONObject item = jsonArray.getJSONObject(i);
+        // Получаем коллекцию "tivat" из Firestore
+        db.collection("tivat")
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        // Итерируем по каждому документу
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            // Получаем дату истечения срока хранения из документа
+                            String expirationDate = document.getString("expiration_date");
 
-                // Получаем дату из строки в формате "dd.MM.yyyy"
-                String dateString = item.getString("дата окончания срока");
-                SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
-                Date expirationDate = sdf.parse(dateString);
+                            // Парсим дату из строки в формате "dd.MM.yyyy"
+                            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
+                            try {
+                                Date expirationDateObj = sdf.parse(expirationDate);
+                                if (expirationDateObj != null) {
+                                    // Проверяем, истек ли срок хранения (срок истек 3 дня назад)
+                                    long threeDaysInMillis = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
+                                    long expirationTimeMillis = expirationDateObj.getTime() + threeDaysInMillis;
 
-                // Проверяем, истекла ли дата
-                if (!isExpired(expirationDate)) {
-                    updatedArray.put(item);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                Toast.makeText(this, "Произошла ошибка при удалении истекших элементов", Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        // Заменяем оригинальный массив обновленным массивом без истекших элементов
-        jsonArray = updatedArray;
-
-        // Сохраняем обновленный массив в SharedPreferences
-        saveDataToPreferences(jsonArray.toString());
+                                    if (expirationTimeMillis < currentTimeMillis) {
+                                        // Срок истек, удаляем документ из Firestore
+                                        document.getReference().delete()
+                                                .addOnSuccessListener(aVoid -> {
+                                                    Log.d("Firestore", "DocumentSnapshot successfully deleted!");
+                                                })
+                                                .addOnFailureListener(e -> {
+                                                    Log.w("Firestore", "Error deleting document", e);
+                                                });
+                                    }
+                                }
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                                Log.e("Firestore", "Error parsing expiration date", e);
+                            }
+                        }
+                    } else {
+                        Log.w("Firestore", "Error getting documents.", task.getException());
+                    }
+                });
     }
 
     private boolean isExpired(Date expirationDate) {
@@ -266,34 +281,95 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    public void startEditingAndDeleting(View v) {
+        Intent intent = new Intent(this, editingAndDeleting.class);
+        intent.putExtra("jsonArray", jsonArray.toString());
+        startActivity(intent);
+    }
+
     public void show_scan(View v) {
         Intent intent = new Intent(this, ScanActivity.class);
         startActivity(intent);
     }
 
+    private void addDataToFirestore(String documentId, Map<String, Object> data) {
+        // Создаем новый документ в коллекции "tivat" с уникальным идентификатором
+        db.collection("tivat")
+                .document(documentId)
+                .set(data, SetOptions.merge())
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("Firestore", "DocumentSnapshot successfully written!");
+                    Toast.makeText(MainActivity.this, "Данные успешно сохранены в Firestore", Toast.LENGTH_SHORT).show();
 
+                    // После успешной записи в базу данных очищаем поля ввода
+                    editTextText6.setText("");
+                    editTextText2.setText("");
+                    editTextText3.setText("");
+                    editTextText4.setText("");
+                    editTextText5.setText("");
+
+                })
+                .addOnFailureListener(e -> {
+                    Log.w("Firestore", "Error writing document", e);
+                    Toast.makeText(MainActivity.this, "Ошибка сохранения данных в Firestore", Toast.LENGTH_SHORT).show();
+                });
+    }
 
     private void addDataToArray() {
         try {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("штрих-код", editTextText6.getText().toString());
-            jsonObject.put("название", editTextText2.getText().toString());
-            jsonObject.put("количество", editTextText3.getText().toString());
-            jsonObject.put("дата окончания срока", editTextText4.getText().toString());
-            jsonObject.put("комментарий", editTextText5.getText().toString());
+            // Создаем объект DataModel с помощью данных из полей ввода
+            DataModel dataModel = new DataModel(
+                    null, // id, который будет присвоен Firestore автоматически
+                    editTextText6.getText().toString(),
+                    editTextText2.getText().toString(),
+                    editTextText3.getText().toString(),
+                    editTextText4.getText().toString(),
+                    editTextText5.getText().toString()
+            );
 
-            jsonArray.put(jsonObject);
-            editTextText6.setText("");
-            editTextText2.setText("");
-            editTextText3.setText("");
-            editTextText4.setText("");
-            editTextText5.setText("");
+            // Создаем уникальный идентификатор, состоящий из barcode, символа тире и expiration_date
+            String documentId = dataModel.getBarcode() + "-" + dataModel.getExpiration_date();
 
-            Log.d("JSON Array", jsonArray.toString());
-        } catch (JSONException e) {
+            // Проверяем, есть ли данные с таким же ID в Firestore
+            db.collection("tivat").document(documentId).get()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            // Если документ с таким ID не существует, добавляем новые данные
+                            if (!task.getResult().exists()) {
+                                // Конвертируем объект DataModel в Map
+                                Map<String, Object> data = new HashMap<>();
+                                data.put("barcode", dataModel.getBarcode());
+                                data.put("item_name", dataModel.getItem_name());
+                                data.put("item_quantity", dataModel.getItem_quantity());
+                                data.put("expiration_date", dataModel.getExpiration_date());
+                                data.put("comment_text", dataModel.getComment_text());
+
+                                // Добавляем данные в Firestore с уникальным идентификатором
+                                addDataToFirestore(documentId, data);
+                            } else {
+                                // Если данные с таким ID уже существуют, выводим сообщение об ошибке
+                                Toast.makeText(MainActivity.this, "Данные с таким ID уже существуют в базе", Toast.LENGTH_SHORT).show();
+                                editTextText6.setText("");
+                                editTextText2.setText("");
+                                editTextText3.setText("");
+                                editTextText4.setText("");
+                                editTextText5.setText("");
+                            }
+                        } else {
+                            Log.d("MainActivity", "Error checking document existence", task.getException());
+                            Toast.makeText(MainActivity.this, "Ошибка при проверке данных в базе", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(this, "Произошла ошибка при добавлении данных", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void sendUpdatedArrayToEditingAndDeleting(JSONArray updatedArray) {
+        Intent intent = new Intent(this, editingAndDeleting.class);
+        intent.putExtra("jsonArray", updatedArray.toString());
+        startActivity(intent);
     }
 
     private void writeJsonToFile(String fileName, String json) {

@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "466632356870",
+    "firebase_url": "https://tivattest-default-rtdb.firebaseio.com",
+    "project_id": "tivattest",
+    "storage_bucket": "tivattest.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:466632356870:android:96c62a4f0a5bddfe8a3f87",
+        "android_client_info": {
+          "package_name": "com.example.prosrok"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQb0LgqjiQXSk8JZfbv1gtNvyDeflBYLY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:466632356870:android:6c36225478b214358a3f87",
+        "android_client_info": {
+          "package_name": "com.example.tivattest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQb0LgqjiQXSk8JZfbv1gtNvyDeflBYLY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

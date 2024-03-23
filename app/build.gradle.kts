@@ -1,5 +1,6 @@
 plugins {
     id("com.android.application")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -29,6 +30,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+    buildFeatures {
+        viewBinding = true
+    }
 }
 
 dependencies {
@@ -44,5 +48,7 @@ dependencies {
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation ("com.journeyapps:zxing-android-embedded:4.1.0")
     implementation ("com.readystatesoftware.sqliteasset:sqliteassethelper:2.0.1")
-
+    implementation("androidx.annotation:annotation:1.4.0")
+    implementation("com.google.firebase:firebase-database:20.3.1")
+    implementation ("com.google.firebase:firebase-firestore:23.0.0")
 }

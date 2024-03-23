@@ -6,6 +6,10 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.readystatesoftware.sqliteasset.SQLiteAssetHelper;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class DataBaseAssetsHelper extends SQLiteAssetHelper {
 
     private static final String DATABASE_NAME = "bar_code_base.sqlite";  // table is 'total_data'
@@ -63,4 +67,46 @@ public class DataBaseAssetsHelper extends SQLiteAssetHelper {
         }
         return result;
     }
+
+    public JSONArray getData() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT * FROM total_data";  // выбираем все столбцы из таблицы
+        Cursor cursor = db.rawQuery(query, null);
+
+        JSONArray jsonArray = new JSONArray();
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int columnIndexBarcode = cursor.getColumnIndex("Artikelnummer");
+            int columnIndexExpirationDate = cursor.getColumnIndex("Дата окончания срока");
+            int columnIndexDescription = cursor.getColumnIndex("Beschreibung");
+
+            do {
+                JSONObject jsonObject = new JSONObject();
+                try {
+                    if (columnIndexBarcode != -1) {
+                        jsonObject.put("штрих-код", cursor.getString(columnIndexBarcode));
+                    }
+                    if (columnIndexExpirationDate != -1) {
+                        jsonObject.put("дата окончания срока", cursor.getString(columnIndexExpirationDate));
+                    }
+                    if (columnIndexDescription != -1) {
+                        jsonObject.put("название", cursor.getString(columnIndexDescription));
+                    }
+                    // добавляем JSON-объект в массив
+                    jsonArray.put(jsonObject);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } while (cursor.moveToNext());
+        }
+
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        db.close();
+
+        return jsonArray;
+    }
+
 }

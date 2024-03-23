@@ -75,6 +75,11 @@ public class ScanActivity extends AppCompatActivity {
         intent.putExtra("SAVE_HISTORY", false);
         intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
 
+        // Добавляем дополнительные параметры
+        intent.putExtra("AUTO_FOCUS", "true");
+        intent.putExtra("PROMPT_MESSAGE", "Наведите на штрих-код");
+        intent.putExtra("BEEP_ENABLED", true);
+
         // Запускаем сканер с использованием ActivityResultLauncher
         scanLauncher.launch(intent);
     }
