@@ -3,11 +3,10 @@ package com.example.prosrok;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Pair;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListView;
+import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -40,8 +39,39 @@ public class show_info extends Activity {
         Button button9 = findViewById(R.id.button9);
         Button button6 = findViewById(R.id.button6);
         Button button7 = findViewById(R.id.button7);
+        Button button8 = findViewById(R.id.button8);
+        Button button9 = findViewById(R.id.button9);
 
-        button3.setOnClickListener(new View.OnClickListener() {
+        // Получаем переданные данные из Intent
+        String jsonArrayString = getIntent().getStringExtra("jsonArray");
+
+        try {
+            jsonArray = new JSONArray(jsonArrayString);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            jsonArray = new JSONArray();
+        }
+
+        // Отображаем данные в TextView с форматированием
+        String formattedData = formatData(jsonArrayString);
+        TextView textView = findViewById(R.id.textView6);
+        textView.setText(formattedData);
+        String overdueInfo = getOverdueInfoBeforeToday(jsonArray);
+        displayOverdueInfo(overdueInfo, R.color.red);
+
+
+
+
+
+        button6.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String overdueInfo = getOverdueInfoBeforeToday(jsonArray);
+                displayOverdueInfo(overdueInfo, R.color.red);
+            }
+        });
+
+        button7.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Создаем намерение для перехода в MainActivity
@@ -59,18 +89,47 @@ public class show_info extends Activity {
             }
         });
 
-        fetchDataAndUpdateList();
 
-
-        button7.setOnClickListener(new View.OnClickListener() {
+        button9.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Получаем сегодняшнюю дату
-                Date currentDate = new Date();
-                // Получаем дату через два дня
-                Calendar calendar = Calendar.getInstance();
-                calendar.add(Calendar.DAY_OF_YEAR, 2);
-                Date twoDaysLaterDate = calendar.getTime();
+                // Вызываем метод formatData для отображения данных в textView6
+                String formattedData = formatData(jsonArrayString);
+                jsonArray = sortJsonArrayByDate(jsonArray);
+                infoTextView.setText(formattedData);
+
+                // Устанавливаем цвет текста в черный
+                infoTextView.setTextColor(getResources().getColor(android.R.color.black));
+            }
+        });
+    }
+
+    private String getAdditionalInfo() {
+        // Измените этот метод, чтобы возвращать необходимую информацию в соответствии с вашей логикой
+        return "Дополнительная информация для отображения";
+    }
+
+    public void onButton6Click(View view) {
+        String overdueInfo = getOverdueInfoToday(jsonArray);
+        displayOverdueInfo(overdueInfo, R.color.red);
+    }
+
+    public void onButton7Click(View view) {
+        String overdueInfo = getOverdueInfoYesterdayTo3(jsonArray);
+        displayOverdueInfo(overdueInfo, R.color.orange);
+    }
+
+    public void onButton8Click(View view) {
+        String overdueInfo = getOverdueInfo3To7(jsonArray);
+        displayOverdueInfo(overdueInfo, R.color.green);
+    }
+
+    private String getOverdueInfoToday(JSONArray jsonArray) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
 
                 // Фильтруем список данных по датам
                 List<Pair<Date, DataModel>> filteredListData = new ArrayList<>();
@@ -95,6 +154,28 @@ public class show_info extends Activity {
                     adapter.add(item);
                 }
 
+
+
+    private String getOverdueInfoYesterdayTo3(JSONArray jsonArray) {
+        List<JSONObject> sortedList = new ArrayList<>();
+
+        // Изменение: Получаем вчерашнюю дату
+        Calendar yesterdayCalendar = Calendar.getInstance();
+        yesterdayCalendar.add(Calendar.DAY_OF_MONTH, -1);
+        Date yesterday = yesterdayCalendar.getTime();
+
+        for (int i = 0; i < jsonArray.length(); i++) {
+            try {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                String dateString = jsonObject.getString("дата окончания срока");
+                Date expirationDate = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).parse(dateString);
+
+                // Проверяем, просрочен ли товар и дата в диапазоне "вчера + 3 дня"
+                if (isDateInRange(expirationDate, getDateWithoutTime(yesterday), getDateAfterDays(3))) {
+                    sortedList.add(jsonObject);
+                }
+            } catch (JSONException | ParseException e) {
+                e.printStackTrace();
             }
         });
 
@@ -132,23 +213,29 @@ public class show_info extends Activity {
 
                         adapter.clear();
 
-                        for (Pair<Date, DataModel> pair : listData) {
-                            DataModel dataModel = pair.second;
-                            String item = "Код товара: " + dataModel.getBarcode() + "\n"
-                                    + "Название: " + dataModel.getItem_name() + "\n"
-                                    + "Количество: " + dataModel.getItem_quantity() + "\n"
-                                    + "Дата окончания срока: " + dataModel.getExpiration_date() + "\n"
-                                    + "Комментарий: " + dataModel.getComment_text()+ "\n"
-                                    + " ";
 
-                            adapter.add(item);
-                        }
-                    }
-                });
+    private Date getDateAfterDays(int days) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_MONTH, days);
+        return calendar.getTime();
     }
 
-    private void fetchDataAndUpdateList() {
-        db.collection("tivat")
+    private String getOverdueInfo3To7(JSONArray jsonArray) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
+        Date today = new Date();
+        Date startDay = new Date(today.getTime() + (3 * 24 * 60 * 60 * 1000));
+        Date endDay = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000));
+        return getOverdueInfo(jsonArray, startDay, endDay);
+    }
+
+    public void goToMain(View view) {
+        // ваш код для перехода на главный экран
+        Intent intent = new Intent(this, MainActivity.class); // Замените YourMainActivity.class на класс вашей главной активности
+        startActivity(intent);
+    }
+
+    private String getOverdueInfo(JSONArray jsonArray, Date startDate, Date endDate) {
+        StringBuilder overdueInfo = new StringBuilder();
 
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {

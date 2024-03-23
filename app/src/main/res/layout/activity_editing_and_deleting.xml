@@ -45,43 +45,42 @@
         android:layout_alignParentBottom="true"
         android:background="#ffe0af">
 
-        <!-- Кнопка редактирования -->
-        <Button
-            android:id="@+id/editButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@color/but_collor"
-            android:text="Редактировать"
-            android:textColor="#000000"
-            android:layout_alignParentTop="true"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="6dp"
-            />
+    <!-- Кнопка редактирования -->
+    <Button
+        android:id="@+id/editButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Редактировать"
+        app:layout_constraintTop_toBottomOf="@+id/listView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
+        />
 
-        <!-- Кнопка удаления -->
-        <Button
-            android:id="@+id/deleteButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@color/but_collor"
-            android:text="Удалить"
-            android:textColor="#000000"
-            android:layout_below="@+id/editButton"
-            android:layout_marginTop="0dp"
-            android:layout_marginBottom="6dp"
-            />
+    <!-- Кнопка удаления -->
+    <Button
+        android:id="@+id/deleteButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Удалить"
+        app:layout_constraintTop_toBottomOf="@+id/editButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        />
 
-        <!-- Кнопка закрытия -->
-        <Button
-            android:id="@+id/closeButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@color/but_collor"
-            android:text="Закрыть"
-            android:textColor="#000000"
-            android:layout_below="@+id/deleteButton"
-            android:layout_marginTop="0dp"
-            android:layout_marginBottom="6dp"
-            />
-    </RelativeLayout>
-</RelativeLayout>
+    <!-- Кнопка закрытия -->
+    <Button
+        android:id="@+id/closeButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Закрыть"
+        app:layout_constraintTop_toBottomOf="@+id/deleteButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        />
+</androidx.constraintlayout.widget.ConstraintLayout>
