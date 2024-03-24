@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import androidx.annotation.Nullable;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     private JSONArray jsonArray;
     private Button btn_scan;
     private FirebaseFirestore db;
+
+    private static final int SCAN_ACTIVITY_REQUEST_CODE = 1001;
 
 
     private boolean isValidDate(String date) {
@@ -281,11 +284,6 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void startEditingAndDeleting(View v) {
-        Intent intent = new Intent(this, editingAndDeleting.class);
-        intent.putExtra("jsonArray", jsonArray.toString());
-        startActivity(intent);
-    }
 
     public void show_scan(View v) {
         Intent intent = new Intent(this, ScanActivity.class);
@@ -366,12 +364,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void sendUpdatedArrayToEditingAndDeleting(JSONArray updatedArray) {
-        Intent intent = new Intent(this, editingAndDeleting.class);
-        intent.putExtra("jsonArray", updatedArray.toString());
-        startActivity(intent);
-    }
-
     private void writeJsonToFile(String fileName, String json) {
         try {
             FileOutputStream fos = openFileOutput(fileName, Context.MODE_PRIVATE);
@@ -381,6 +373,28 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
             Toast.makeText(this, "Ошибка сохранения данных", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void updateFieldsFromScan(String barcode, String description) {
+        editTextText6.setText(barcode);
+        editTextText2.setText(description);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == SCAN_ACTIVITY_REQUEST_CODE) { // Заменено на SCAN_ACTIVITY_REQUEST_CODE
+            if (resultCode == RESULT_OK && data != null) {
+                String barcode = data.getStringExtra("barcode");
+                String description = data.getStringExtra("description");
+
+                // Установите данные в соответствующие поля EditText
+                editTextText6.setText(barcode);
+                editTextText2.setText(description);
+            } else {
+                // Обработайте случай, если сканирование было отменено или не удалось найти данные
+            }
         }
     }
 }

@@ -51,6 +51,7 @@ public class DataBaseAssetsHelper extends SQLiteAssetHelper {
 
         String result = null;
 
+
         if (cursor != null && cursor.moveToFirst()) {
             int columnIndex = cursor.getColumnIndex("Beschreibung");
             result = cursor.getString(columnIndex);
