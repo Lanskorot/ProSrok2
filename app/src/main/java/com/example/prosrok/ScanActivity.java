@@ -70,6 +70,8 @@ public class ScanActivity extends AppCompatActivity {
         intentIntegrator.initiateScan();
     }
 
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -84,17 +86,9 @@ public class ScanActivity extends AppCompatActivity {
                 if (resultFromDatabase != null) {
                     // Делаем что-то с данными из базы данных
                     Toast.makeText(this, "Данные из базы данных: " + resultFromDatabase, Toast.LENGTH_SHORT).show();
-                    String scannedBarcode  = data.getStringExtra("barcode");
-                    String description = data.getStringExtra("Beschreibung");
-
-                    // Устанавливаем данные в результат и закрываем активность
                     Intent resultIntent = new Intent();
-                    resultIntent.putExtra("barcode", scannedBarcode );
-                    resultIntent.putExtra("description", description);
+                    resultIntent.putExtra("Beschreibung", resultFromDatabase);
                     setResult(RESULT_OK, resultIntent);
-
-
-
                     finish();
                 } else {
                     Toast.makeText(this, "Данные для штрих-кода " + barcode + " не найдены", Toast.LENGTH_SHORT).show();
@@ -103,6 +97,4 @@ public class ScanActivity extends AppCompatActivity {
         }
         finish();
     }
-
-
 }

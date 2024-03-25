@@ -107,7 +107,7 @@
             android:background="#FFFFFF"
             android:ems="10"
             android:hint="@string/hint_name"
-            android:inputType="text"
+            android:inputType="textMultiLine"
             android:textSize="24sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.496"
@@ -201,20 +201,7 @@
             app:layout_constraintStart_toEndOf="@+id/editTextText6"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <Button
-            android:id="@+id/edition"
-            android:layout_width="0dp"
-            android:layout_height="59dp"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="@color/but_collor"
-            android:onClick="startEditingAndDeleting"
-            android:text="Редактироваие и удаление"
-            android:textColor="#000000"
-            android:textSize="18sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/button2" />
+
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

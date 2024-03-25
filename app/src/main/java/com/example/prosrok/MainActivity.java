@@ -384,16 +384,20 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == SCAN_ACTIVITY_REQUEST_CODE) { // Заменено на SCAN_ACTIVITY_REQUEST_CODE
-            if (resultCode == RESULT_OK && data != null) {
-                String barcode = data.getStringExtra("barcode");
-                String description = data.getStringExtra("description");
+        if (requestCode == SCAN_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
+            if (data != null) {
+                if (data.hasExtra("Beschreibung")) {
+                    String beschreibung = data.getStringExtra("Beschreibung");
 
-                // Установите данные в соответствующие поля EditText
-                editTextText6.setText(barcode);
-                editTextText2.setText(description);
-            } else {
-                // Обработайте случай, если сканирование было отменено или не удалось найти данные
+                    editTextText2.setText(beschreibung.replaceAll("^resultArtikelnummer: ", ""));
+                    // Заполнить editTextText6 тем же значением
+                    editTextText6.setText(beschreibung.replaceAll("^Beschreibung: ", ""));
+
+                    Toast.makeText(this, "Данные успешно получены из ScanActivity", Toast.LENGTH_LONG).show();
+
+
+                }
+
             }
         }
     }
