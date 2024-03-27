@@ -1,12 +1,19 @@
 package com.example.prosrok;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Pair;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -22,25 +29,60 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import android.util.Log;
 
 public class show_info extends Activity {
     private ListView listView;
     private ArrayAdapter<String> adapter;
     private List<Pair<Date, DataModel>> listData;
     private FirebaseFirestore db;
+    private String selectedDatabase;
+    private static final String TAG = "show_info";
+
+    private void showOptionsDialog(final int position) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Выберите действие");
+        builder.setItems(new CharSequence[]{"Удалить", "Редактировать"}, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0:
+                        // Опция "Удалить" выбрана, выполните соответствующее действие здесь
+
+                        break;
+                    case 1:
+                        // Опция "Редактировать" выбрана, выполните соответствующее действие здесь
+                        break;
+                }
+            }
+        });
+        builder.create().show();
+    }
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_info);
+        Log.d(TAG, "onCreate()");
+
+        final LinearLayout linearLayout = findViewById(R.id.scrollView);
 
         init();
         db = FirebaseFirestore.getInstance();
+
+        SharedPreferences preferences = getSharedPreferences("com.example.prosrok", Context.MODE_PRIVATE);
+        selectedDatabase = preferences.getString("selectedDatabase", "tivat");
+        Log.d(TAG, "Selected database: " + selectedDatabase);
+
         Button button3 = findViewById(R.id.button3);
         Button button9 = findViewById(R.id.button9);
         Button button6 = findViewById(R.id.button6);
         Button button7 = findViewById(R.id.button7);
         Button button8 = findViewById(R.id.button8);
+
+        listData.clear();
 
         button3.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -55,6 +97,8 @@ public class show_info extends Activity {
         button9.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                linearLayout.setBackgroundColor(Color.WHITE);
+                adapter.clear();
                 // Вызываем метод для получения данных и обновления списка
                 fetchDataAndUpdateList();
             }
@@ -62,9 +106,16 @@ public class show_info extends Activity {
 
         fetchDataAndUpdateList();
 
+
+
         button6.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                int redColorWithTransparency = Color.argb(128, Color.red(getResources().getColor(R.color.red)),
+                        Color.green(getResources().getColor(R.color.red)),
+                        Color.blue(getResources().getColor(R.color.red)));
+                linearLayout.setBackgroundColor(redColorWithTransparency); // Устанавливаем цвет с прозрачностью как фон
+                adapter.clear();
                 // Получаем сегодняшнюю дату
                 Calendar calendar = Calendar.getInstance();
                 // Отнимаем один день
@@ -100,18 +151,26 @@ public class show_info extends Activity {
         button7.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Получаем сегодняшнюю дату
-                Date currentDate = new Date();
-                // Получаем дату через два дня
+                int orangeColorWithTransparency = Color.argb(128,
+                        Color.red(getResources().getColor(R.color.orange)),
+                        Color.green(getResources().getColor(R.color.orange)),
+                        Color.blue(getResources().getColor(R.color.orange)));
+                linearLayout.setBackgroundColor(orangeColorWithTransparency);
+                adapter.clear();
+                // Получаем вчерашнюю дату
                 Calendar calendar = Calendar.getInstance();
-                calendar.add(Calendar.DAY_OF_YEAR, 2);
+                calendar.add(Calendar.DAY_OF_YEAR, -1);
+                Date yesterdayDate = calendar.getTime();
+
+                // Получаем дату через два дня
+                calendar.add(Calendar.DAY_OF_YEAR, 3);
                 Date twoDaysLaterDate = calendar.getTime();
 
                 // Фильтруем список данных по датам
                 List<Pair<Date, DataModel>> filteredListData = new ArrayList<>();
                 for (Pair<Date, DataModel> pair : listData) {
                     Date expirationDate = pair.first;
-                    if (expirationDate.after(currentDate) && expirationDate.before(twoDaysLaterDate)) {
+                    if (expirationDate.after(yesterdayDate) && expirationDate.before(twoDaysLaterDate)) {
                         filteredListData.add(pair);
                     }
                 }
@@ -136,10 +195,16 @@ public class show_info extends Activity {
         button8.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                int greenColorWithTransparency = Color.argb(128,
+                        Color.red(getResources().getColor(R.color.green)),
+                        Color.green(getResources().getColor(R.color.green)),
+                        Color.blue(getResources().getColor(R.color.green)));
+                linearLayout.setBackgroundColor(greenColorWithTransparency);
+                adapter.clear();
                 // Получаем сегодняшнюю дату
                 Calendar calendar = Calendar.getInstance();
                 // Добавляем три дня к текущей дате
-                calendar.add(Calendar.DAY_OF_YEAR, 3);
+                calendar.add(Calendar.DAY_OF_YEAR, 2);
                 Date threeDaysLaterDate = calendar.getTime();
 
                 // Добавляем еще четыре дня для получения даты через 7 дней от исходной даты
@@ -171,11 +236,15 @@ public class show_info extends Activity {
             }
         });
 
-        db.collection("tivat")
+        final String finalSelectedDatabase = selectedDatabase;
+
+        db.collection(selectedDatabase)
+
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        listData.clear();
                         for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
                             String barcode = documentSnapshot.getString("barcode");
                             String itemName = documentSnapshot.getString("item_name");
@@ -183,6 +252,7 @@ public class show_info extends Activity {
                             String expirationDate = documentSnapshot.getString("expiration_date");
                             String idNumber = documentSnapshot.getString("id_number");
                             String commentText = documentSnapshot.getString("comment_text");
+                            Log.d(TAG, "Data retrieval successful");
 
                             try {
                                 SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy");
@@ -216,16 +286,23 @@ public class show_info extends Activity {
 
                             adapter.add(item);
                         }
+                        Log.d(TAG, "Data retrieval successful");
                     }
                 });
     }
+
+
 
     private void fetchDataAndUpdateList() {
-        db.collection("tivat")
+        Log.d(TAG, "fetchDataAndUpdateList(): Started fetching data...");
+        listData.clear();
+        final String finalSelectedDatabase = selectedDatabase;
+        db.collection(selectedDatabase)
                 .get()
                 .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                     @Override
                     public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        Log.d(TAG, "fetchDataAndUpdateList(): Data fetching successful");
                         for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
                             String barcode = documentSnapshot.getString("barcode");
                             String itemName = documentSnapshot.getString("item_name");
@@ -269,10 +346,20 @@ public class show_info extends Activity {
                     }
                 });
     }
+
     private void init() {
         listView = findViewById(R.id.textView6);
         listData = new ArrayList<>();
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
         listView.setAdapter(adapter);
+
+        // Добавляем слушатель для обработки долгого нажатия на элемент списка
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                showOptionsDialog(position); // Показываем всплывающее окно с опциями при долгом нажатии
+                return true; // Указываем, что событие было обработано
+            }
+        });
     }
 }

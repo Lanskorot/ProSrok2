@@ -82,10 +82,10 @@ public class ScanActivity extends AppCompatActivity {
             } else {
                 String barcode = intentResult.getContents();
                 // Запрашиваем данные из базы данных
-                String resultFromDatabase = dbHelper.getDataFromBarcodeEAN(barcode);
+                String[] resultFromDatabase = dbHelper.getDataFromBarcodeEAN(barcode);
                 if (resultFromDatabase != null) {
                     // Делаем что-то с данными из базы данных
-                    Toast.makeText(this, "Данные из базы данных: " + resultFromDatabase, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Данные из базы данных: " + resultFromDatabase[1], Toast.LENGTH_SHORT).show();
                     Intent resultIntent = new Intent();
                     resultIntent.putExtra("Beschreibung", resultFromDatabase);
                     setResult(RESULT_OK, resultIntent);

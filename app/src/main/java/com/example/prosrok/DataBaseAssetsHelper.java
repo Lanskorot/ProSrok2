@@ -44,7 +44,7 @@ public class DataBaseAssetsHelper extends SQLiteAssetHelper {
         return result;
     }
 
-    public String getDataFromBarcodeEAN(String barcode) {
+    public String[] getDataFromBarcodeEAN(String barcode) {
         SQLiteDatabase db = this.getReadableDatabase();
         String query = "SELECT Beschreibung, `Artikelnummer` FROM total_data WHERE `EAN Nummer` = ?";
         Cursor cursor = db.rawQuery(query, new String[]{barcode});
@@ -75,7 +75,7 @@ public class DataBaseAssetsHelper extends SQLiteAssetHelper {
         }
 
         // You can return both values in a more structured way, e.g., as a JSON string or a custom object
-        return resultBeschreibung + "," + resultArtikelnummer;
+        return new String[]{resultArtikelnummer, resultBeschreibung};  //resultBeschreibung + "," + resultArtikelnummer;
 
     }
 

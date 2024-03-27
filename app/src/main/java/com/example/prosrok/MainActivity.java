@@ -1,6 +1,7 @@
 package com.example.prosrok;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -11,16 +12,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.SetOptions;
-
 import org.json.JSONArray;
 import org.json.JSONException;
-
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
@@ -29,7 +29,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import androidx.annotation.Nullable;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -37,8 +36,9 @@ public class MainActivity extends AppCompatActivity {
     private JSONArray jsonArray;
     private Button btn_scan;
     private FirebaseFirestore db;
+    private CollectionReference dbCollection;
 
-    private static final int SCAN_ACTIVITY_REQUEST_CODE = 1001;
+    private static final int SCAN_ACTIVITY_REQUEST_CODE = 1;
 
 
     private boolean isValidDate(String date) {
@@ -59,8 +59,50 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Инициализация базы данных Firestore по умолчанию (в данном случае "tivat")
         db = FirebaseFirestore.getInstance();
 
+        if (!isDatabaseSelected()) {
+            // База данных еще не выбрана, отображаем диалоговое окно для выбора
+            showDatabaseSelectionDialog();
+        } else {
+            // База данных уже выбрана, продолжаем выполнение приложения
+            initializeUI();
+        }
+    }
+
+    private void showDatabaseSelectionDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Выберите базу данных");
+
+        // Варианты выбора базы данных
+        final String[] databases = {"tivat", "bar"};
+        builder.setItems(databases, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Установить выбранную коллекцию Firestore
+                String selectedDatabase = databases[which];
+                setDatabase(selectedDatabase);
+            }
+        });
+
+        // Показать диалоговое окно
+        builder.show();
+    }
+
+    private void setDatabase(String databaseName) {
+        // Сохраняем имя выбранной базы данных в SharedPreferences
+        SharedPreferences preferences = getSharedPreferences("com.example.prosrok", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("selectedDatabase", databaseName);
+        editor.putBoolean("isDatabaseSelected", true); // добавляем флаг
+        editor.apply();
+
+        // Далее можно выполнить другие действия, связанные с выбранной базой данных
+        initializeUI();
+    }
+
+    private void initializeUI() {
         editTextText6 = findViewById(R.id.editTextText6);
         editTextText2 = findViewById(R.id.editTextText2);
         editTextText3 = findViewById(R.id.editTextText3);
@@ -173,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void startScanActivity() {
         Intent intent = new Intent(this, ScanActivity.class);
-        startActivity(intent);
+        startActivityForResult(intent, SCAN_ACTIVITY_REQUEST_CODE);
     }
 
 
@@ -291,26 +333,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addDataToFirestore(String documentId, Map<String, Object> data) {
-        // Создаем новый документ в коллекции "tivat" с уникальным идентификатором
-        db.collection("tivat")
-                .document(documentId)
-                .set(data, SetOptions.merge())
-                .addOnSuccessListener(aVoid -> {
-                    Log.d("Firestore", "DocumentSnapshot successfully written!");
-                    Toast.makeText(MainActivity.this, "Данные успешно сохранены в Firestore", Toast.LENGTH_SHORT).show();
+        if (dbCollection != null) {
+            // Создаем новый документ в выбранной коллекции с уникальным идентификатором
+            dbCollection.document(documentId)
+                    .set(data, SetOptions.merge())
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d("Firestore", "DocumentSnapshot successfully written!");
+                        Toast.makeText(MainActivity.this, "Данные успешно сохранены в Firestore", Toast.LENGTH_SHORT).show();
 
-                    // После успешной записи в базу данных очищаем поля ввода
-                    editTextText6.setText("");
-                    editTextText2.setText("");
-                    editTextText3.setText("");
-                    editTextText4.setText("");
-                    editTextText5.setText("");
+                        // После успешной записи в базу данных очищаем поля ввода
+                        editTextText6.setText("");
+                        editTextText2.setText("");
+                        editTextText3.setText("");
+                        editTextText4.setText("");
+                        editTextText5.setText("");
 
-                })
-                .addOnFailureListener(e -> {
-                    Log.w("Firestore", "Error writing document", e);
-                    Toast.makeText(MainActivity.this, "Ошибка сохранения данных в Firestore", Toast.LENGTH_SHORT).show();
-                });
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.w("Firestore", "Error writing document", e);
+                        Toast.makeText(MainActivity.this, "Ошибка сохранения данных в Firestore", Toast.LENGTH_SHORT).show();
+                    });
+        } else {
+            Log.e("Firestore", "dbCollection is null. Cannot add data to Firestore.");
+        }
     }
 
     private void addDataToArray() {
@@ -329,35 +374,38 @@ public class MainActivity extends AppCompatActivity {
             String documentId = dataModel.getBarcode() + "-" + dataModel.getExpiration_date();
 
             // Проверяем, есть ли данные с таким же ID в Firestore
-            db.collection("tivat").document(documentId).get()
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            // Если документ с таким ID не существует, добавляем новые данные
-                            if (!task.getResult().exists()) {
-                                // Конвертируем объект DataModel в Map
-                                Map<String, Object> data = new HashMap<>();
-                                data.put("barcode", dataModel.getBarcode());
-                                data.put("item_name", dataModel.getItem_name());
-                                data.put("item_quantity", dataModel.getItem_quantity());
-                                data.put("expiration_date", dataModel.getExpiration_date());
-                                data.put("comment_text", dataModel.getComment_text());
+            if (dbCollection != null) {
+                dbCollection.document(documentId).get()
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                // Если документ с таким ID не существует, добавляем новые данные
+                                if (!task.getResult().exists()) {
+                                    // Конвертируем объект DataModel в Map
+                                    Map<String, Object> data = new HashMap<>();
+                                    data.put("barcode", dataModel.getBarcode());
+                                    data.put("item_name", dataModel.getItem_name());
+                                    data.put("item_quantity", dataModel.getItem_quantity());
+                                    data.put("expiration_date", dataModel.getExpiration_date());
+                                    data.put("comment_text", dataModel.getComment_text());
 
-                                // Добавляем данные в Firestore с уникальным идентификатором
-                                addDataToFirestore(documentId, data);
+                                    // Добавляем данные в Firestore с уникальным идентификатором
+                                    addDataToFirestore(documentId, data);
+                                } else {
+                                    // Если данные с таким ID уже существуют, выводим сообщение об ошибке
+                                    Toast.makeText(MainActivity.this, "Данные с таким ID уже существуют в базе", Toast.LENGTH_SHORT).show();
+                                    editTextText6.setText("");
+                                    editTextText2.setText("");
+                                    editTextText3.setText("");
+                                    editTextText4.setText("");
+                                    editTextText5.setText("");
+                                }
                             } else {
-                                // Если данные с таким ID уже существуют, выводим сообщение об ошибке
-                                Toast.makeText(MainActivity.this, "Данные с таким ID уже существуют в базе", Toast.LENGTH_SHORT).show();
-                                editTextText6.setText("");
-                                editTextText2.setText("");
-                                editTextText3.setText("");
-                                editTextText4.setText("");
-                                editTextText5.setText("");
+                                Toast.makeText(MainActivity.this, "Ошибка при проверке данных в базе", Toast.LENGTH_SHORT).show();
                             }
-                        } else {
-                            Log.d("MainActivity", "Error checking document existence", task.getException());
-                            Toast.makeText(MainActivity.this, "Ошибка при проверке данных в базе", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                        });
+            } else {
+                Log.e("Firestore", "dbCollection is null. Cannot add data to Firestore.");
+            }
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(this, "Произошла ошибка при добавлении данных", Toast.LENGTH_SHORT).show();
@@ -387,18 +435,26 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == SCAN_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
             if (data != null) {
                 if (data.hasExtra("Beschreibung")) {
-                    String beschreibung = data.getStringExtra("Beschreibung");
+                    String[] beschreibung = data.getStringArrayExtra("Beschreibung");
 
-                    editTextText2.setText(beschreibung.replaceAll("^resultArtikelnummer: ", ""));
-                    // Заполнить editTextText6 тем же значением
-                    editTextText6.setText(beschreibung.replaceAll("^Beschreibung: ", ""));
+                    // Разделим значения resultBeschreibung и resultArtikelnummer
+                    assert beschreibung != null;
+                    if (beschreibung.length >= 2) {
+                        String resultArtikelnummer = beschreibung[0];
+                        String resultBeschreibung = beschreibung[1];
 
-                    Toast.makeText(this, "Данные успешно получены из ScanActivity", Toast.LENGTH_LONG).show();
-
-
+                        // Установим значения в соответствующие поля
+                        editTextText2.setText(resultBeschreibung);
+                        editTextText6.setText(resultArtikelnummer);
+                    }
                 }
-
             }
         }
     }
+
+    private boolean isDatabaseSelected() {
+        SharedPreferences preferences = getSharedPreferences("com.example.prosrok", Context.MODE_PRIVATE);
+        return preferences.getBoolean("isDatabaseSelected", false);
+    }
 }
+
