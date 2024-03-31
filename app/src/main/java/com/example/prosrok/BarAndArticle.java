@@ -107,9 +107,6 @@ public class BarAndArticle extends AppCompatActivity {
                 goToMainActivity();
             }
         });
-
-
-
     }
 
     private void goToMainActivity() {
