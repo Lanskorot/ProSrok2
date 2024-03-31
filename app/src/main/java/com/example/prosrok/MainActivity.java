@@ -12,9 +12,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -59,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Инициализация базы данных Firestore по умолчанию (в данном случае "tivat")
         db = FirebaseFirestore.getInstance();
 
         if (!isDatabaseSelected()) {
@@ -76,7 +78,8 @@ public class MainActivity extends AppCompatActivity {
         builder.setTitle("Выберите базу данных");
 
         // Варианты выбора базы данных
-        final String[] databases = {"tivat", "bar"};
+        final String[] databases = {"tivat", "3801","3802","3804","3805","3806","3807",
+                "3808","3809","3810","38101","38102","38103","35901"};
         builder.setItems(databases, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -103,6 +106,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeUI() {
+
+        SharedPreferences preferences = getSharedPreferences("com.example.prosrok", Context.MODE_PRIVATE);
+        String selectedDatabase = preferences.getString("selectedDatabase", "");
+        if (!selectedDatabase.isEmpty()) {
+            dbCollection = db.collection(selectedDatabase);
+        } else {
+            // Обработка ошибки, если база данных не была выбрана
+            Log.e("MainActivity", "База данных не выбрана");
+        }
         editTextText6 = findViewById(R.id.editTextText6);
         editTextText2 = findViewById(R.id.editTextText2);
         editTextText3 = findViewById(R.id.editTextText3);
@@ -154,12 +166,23 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Button btnGoToArticle = findViewById(R.id.GoToArticle);
+        btnGoToArticle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, BarAndArticle.class);
+                startActivity(intent);
+            }
+        });
+
         btn_scan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startScanActivity();
             }
         });
+
+
 
         jsonArray = loadDataFromPreferences();
 
@@ -210,7 +233,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // waiting of item editing
+        String[] selectedToEditUid;
+        selectedToEditUid = getIntent().getStringArrayExtra("selectedToEditUid");
+        if (selectedToEditUid != null) {
+            // fields to fill
+            String resultArtikelnummer = selectedToEditUid[0];
+            String resultBeschreibung = selectedToEditUid[1];
+            String expirationDate = selectedToEditUid[2];
 
+            // fields filling
+            editTextText2.setText(resultBeschreibung);
+            editTextText6.setText(resultArtikelnummer);
+            editTextText4.setText(expirationDate);
+        }
     }
 
     private void startScanActivity() {
@@ -251,9 +287,7 @@ public class MainActivity extends AppCompatActivity {
         // Получаем текущее время
         long currentTimeMillis = System.currentTimeMillis();
 
-        // Получаем коллекцию "tivat" из Firestore
-        db.collection("tivat")
-                .get()
+        dbCollection.get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         // Итерируем по каждому документу
@@ -326,11 +360,6 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-
-    public void show_scan(View v) {
-        Intent intent = new Intent(this, ScanActivity.class);
-        startActivity(intent);
-    }
 
     private void addDataToFirestore(String documentId, Map<String, Object> data) {
         if (dbCollection != null) {

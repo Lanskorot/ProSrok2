@@ -66,14 +66,6 @@ public class DataBaseAssetsHelper extends SQLiteAssetHelper {
             cursor.close();
         }
 
-        if (resultBeschreibung == null) {
-            resultBeschreibung = "Товар не найден.";
-        }
-
-        if (resultArtikelnummer == null) {
-            resultArtikelnummer = "Товар не найден.";
-        }
-
         // You can return both values in a more structured way, e.g., as a JSON string or a custom object
         return new String[]{resultArtikelnummer, resultBeschreibung};  //resultBeschreibung + "," + resultArtikelnummer;
 

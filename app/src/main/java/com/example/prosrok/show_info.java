@@ -8,7 +8,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Pair;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -16,6 +18,9 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 
+import androidx.annotation.NonNull;
+
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -29,7 +34,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import android.util.Log;
 
 public class show_info extends Activity {
     private ListView listView;
@@ -37,30 +41,7 @@ public class show_info extends Activity {
     private List<Pair<Date, DataModel>> listData;
     private FirebaseFirestore db;
     private String selectedDatabase;
-    private static final String TAG = "show_info";
-
-    private void showOptionsDialog(final int position) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Выберите действие");
-        builder.setItems(new CharSequence[]{"Удалить", "Редактировать"}, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                switch (which) {
-                    case 0:
-                        // Опция "Удалить" выбрана, выполните соответствующее действие здесь
-
-                        break;
-                    case 1:
-                        // Опция "Редактировать" выбрана, выполните соответствующее действие здесь
-                        break;
-                }
-            }
-        });
-        builder.create().show();
-    }
-
-
-
+    private static final String TAG = "ShowInfo";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,6 +92,8 @@ public class show_info extends Activity {
         button6.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+
                 int redColorWithTransparency = Color.argb(128, Color.red(getResources().getColor(R.color.red)),
                         Color.green(getResources().getColor(R.color.red)),
                         Color.blue(getResources().getColor(R.color.red)));
@@ -347,6 +330,42 @@ public class show_info extends Activity {
                 });
     }
 
+    private void deleteSelectedUid(String selectedId){
+        db.collection(selectedDatabase).document(selectedId)
+                .delete()
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "DocumentSnapshot successfully deleted!");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error deleting document", e);
+                    }
+                });
+    }
+
+    interface OptionSelectedListener {
+        void onOptionSelected(int option);
+    }
+
+    private void showOptionsDialog(final OptionSelectedListener listener) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Выберите действие");
+
+        builder.setItems(new CharSequence[]{"Удалить", "Редактировать"}, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (listener != null) {
+                    listener.onOptionSelected(which);
+                }
+            }
+        });
+        builder.create().show();
+    }
+
     private void init() {
         listView = findViewById(R.id.textView6);
         listData = new ArrayList<>();
@@ -357,7 +376,34 @@ public class show_info extends Activity {
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                showOptionsDialog(position); // Показываем всплывающее окно с опциями при долгом нажатии
+                // Показываем всплывающее окно с опциями при долгом нажатии
+                showOptionsDialog(new OptionSelectedListener() {
+                    @Override
+                    public void onOptionSelected(int option) {
+                        DataModel answerModel = listData.get(position).second;
+                        // needed fields for processing
+                        String editedBarcode = answerModel.getBarcode();
+                        String editedItemName = answerModel.getItem_name();
+                        String editedExpirationDate = answerModel.getExpiration_date();
+                        // made document ID in firebase
+                        String selectedUid = editedBarcode + "-" + editedExpirationDate;
+                        switch (option){
+                            case 0:
+                                deleteSelectedUid(selectedUid);
+                                fetchDataAndUpdateList();
+                                break;
+                            case 1:
+                                String[] editDataArray = {editedBarcode, editedItemName,
+                                        editedExpirationDate};
+                                Intent editIntent = new Intent(show_info.this, MainActivity.class);
+                                editIntent.putExtra("selectedToEditUid", editDataArray);
+                                deleteSelectedUid(selectedUid);
+                                // Запускаем активити MainActivity
+                                startActivity(editIntent);
+                                break;
+                        }
+                    }
+                });
                 return true; // Указываем, что событие было обработано
             }
         });
