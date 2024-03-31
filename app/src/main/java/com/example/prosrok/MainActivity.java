@@ -12,9 +12,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -34,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText editTextText6, editTextText2, editTextText3, editTextText4, editTextText5;
     private JSONArray jsonArray;
-    private Button btn_scan;
+    private Button btnScan;
     private FirebaseFirestore db;
     private CollectionReference dbCollection;
 
@@ -103,13 +105,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeUI() {
+
+        SharedPreferences preferences = getSharedPreferences("com.example.prosrok", Context.MODE_PRIVATE);
+        String selectedDatabase = preferences.getString("selectedDatabase", "");
+        if (!selectedDatabase.isEmpty()) {
+            dbCollection = db.collection(selectedDatabase);
+        } else {
+            // Обработка ошибки, если база данных не была выбрана
+            Log.e("MainActivity", "База данных не выбрана");
+        }
         editTextText6 = findViewById(R.id.editTextText6);
         editTextText2 = findViewById(R.id.editTextText2);
         editTextText3 = findViewById(R.id.editTextText3);
         editTextText4 = findViewById(R.id.editTextText4);
         editTextText5 = findViewById(R.id.editTextText5);
         Button button = findViewById(R.id.button);
-        btn_scan = findViewById(R.id.btn_scan);
+        btnScan = findViewById(R.id.btn_scan);
 
         removeExpiredItemsFromFirestore();
 
@@ -154,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btn_scan.setOnClickListener(new View.OnClickListener() {
+        btnScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startScanActivity();
@@ -210,7 +221,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // waiting of item editing
+        String[] selectedToEditUid;
+        selectedToEditUid = getIntent().getStringArrayExtra("selectedToEditUid");
+        if (selectedToEditUid != null) {
+            // fields to fill
+            String resultArtikelnummer = selectedToEditUid[0];
+            String resultBeschreibung = selectedToEditUid[1];
+            String expirationDate = selectedToEditUid[2];
 
+            // fields filling
+            editTextText2.setText(resultBeschreibung);
+            editTextText6.setText(resultArtikelnummer);
+            editTextText4.setText(expirationDate);
+        }
     }
 
     private void startScanActivity() {
@@ -321,7 +345,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void show_data(View v) {
-        Intent intent = new Intent(this, show_info.class);
+        Intent intent = new Intent(this, ShowInfo.class);
         intent.putExtra("jsonArray", jsonArray.toString());
         startActivity(intent);
     }
