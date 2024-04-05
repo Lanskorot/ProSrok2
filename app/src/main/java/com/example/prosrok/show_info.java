@@ -10,7 +10,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
-import android.util.TypedValue;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -92,8 +91,6 @@ public class show_info extends Activity {
         button6.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-
                 int redColorWithTransparency = Color.argb(128, Color.red(getResources().getColor(R.color.red)),
                         Color.green(getResources().getColor(R.color.red)),
                         Color.blue(getResources().getColor(R.color.red)));

@@ -12,18 +12,19 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-import androidx.annotation.NonNull;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
+
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.SetOptions;
+
 import org.json.JSONArray;
 import org.json.JSONException;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
@@ -486,4 +487,3 @@ public class MainActivity extends AppCompatActivity {
         return preferences.getBoolean("isDatabaseSelected", false);
     }
 }
-
